@@ -355,6 +355,52 @@ canvas{max-width:100%;}
 }
 
 
+/* Animated cards */
+.card {
+  animation: fadeUp 0.6s ease;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Emoji pulse */
+#healthEmoji {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Language dropdown styling */
+#languageSelect {
+  background-color: #02071a;        /* dark background */
+  color: #bfefff;                   /* text color */
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Options inside dropdown */
+#languageSelect option {
+  background-color: #050b24;        /* dropdown list bg */
+  color: #bfefff;
+}
+
+
 </style>
 </head>
 
@@ -365,6 +411,18 @@ canvas{max-width:100%;}
     <aside class="sidebar">
         <div>
             <div class="sidebar-title">AirAware</div>
+            <!-- ADD BELOW AirAware title -->
+            <select id="languageSelect"
+                    style="margin-top:8px"
+                    onchange="applyLanguage(this.value)">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी</option>
+                    <option value="te">తెలుగు</option>
+                    <option value="ta">Tamil</option>
+                    <option value="kn">Kannada</option>
+                    <option value="ml">Malayalam</option>
+            </select>
+
             <div class="sidebar-sub">Precision in Every Prediction</div>
 
             <select id="stateSelect" onchange="onStateChange()">
@@ -383,27 +441,29 @@ canvas{max-width:100%;}
                 <option>Jammu and Kashmir</option>
             </select>
 
-            <div class="sidebar-section-label">Views</div>
-            <button class="sb-btn active" onclick="showPage('home',this)">Home</button>
-            <button class="sb-btn" onclick="showPage('hourly',this)">Hourly AQI</button>
-            <button class="sb-btn" onclick="showPage('daily',this)">Daily AQI</button>
-            <button class="sb-btn" onclick="showPage('monthly',this)">Monthly AQI</button>
-            <button class="sb-btn" onclick="showPage('prediction',this)">Prediction</button>
+            <div class="sidebar-section-label" data-i18n="views">Views</div>
+            <button class="sb-btn active" onclick="showPage('home',this)" data-i18n="home">Home</button>
+            <button class="sb-btn" onclick="showPage('hourly',this)" data-i18n="hourly">Hourly AQI</button>
+            <button class="sb-btn" onclick="showPage('daily',this)" data-i18n="daily">Daily AQI</button>
+            <button class="sb-btn" onclick="showPage('monthly',this)" data-i18n="monthly">Monthly AQI</button>
+            <button class="sb-btn" onclick="showPage('prediction',this)" data-i18n="prediction">Prediction</button>
 
-            <div class="sidebar-section-label">Advanced</div>
-            <button class="sb-btn" onclick="showPage('advanced',this)">Advanced Hub</button>
-            <button class="sb-btn" onclick="showPage('heatmap',this)">Heatmap</button>
-            <button class="sb-btn" onclick="showPage('compare',this)">Compare States</button>
-            <button class="sb-btn" onclick="showPage('analytics',this)">Analytics</button>
-            <button class="sb-btn" onclick="showPage('ai',this)">AI Insights</button>
-            <button class="sb-btn" onclick="showPage('tools',this)">Tools & Themes</button>
+            <div class="sidebar-section-label" data-i18n="advanced">Advanced</div>
 
-            <div class="sidebar-section-label">Extras</div>
+            <button class="sb-btn" onclick="showPage('advanced',this)" data-i18n="advancedHub">Advanced Hub</button>
+            <button class="sb-btn" onclick="showPage('heatmap',this)" data-i18n="heatmap">Heatmap</button>
+            <button class="sb-btn" onclick="showPage('compare',this)" data-i18n="compareStates">Compare States</button>
+            <button class="sb-btn" onclick="showPage('analytics',this)" data-i18n="analytics">Analytics</button>
+            <button class="sb-btn" onclick="showPage('ai',this)" data-i18n="aiInsights">AI Insights</button>
+            <button class="sb-btn" onclick="showPage('tools',this)" data-i18n="toolsThemes">Tools & Themes</button>
+
+            <div class="sidebar-section-label" data-i18n="extras">Extras</div>
+
             <!-- extras open popup instead of new pages -->
-            <button class="sb-btn" onclick="openPopup('about')">About Us</button>
-            <button class="sb-btn" onclick="openPopup('query')">Query</button>
-            <button class="sb-btn" onclick="openPopup('share')">Share</button>
-            <button class="sb-btn" onclick="openPopup('feedback')">Feedback</button>
+            <button class="sb-btn" onclick="openPopup('about')" data-i18n="aboutUs">About Us</button>
+            <button class="sb-btn" onclick="openPopup('query')" data-i18n="query">Query</button>
+            <button class="sb-btn" onclick="openPopup('share')" data-i18n="share">Share</button>
+            <button class="sb-btn" onclick="openPopup('feedback')"  data-i18n="feedback">Feedback</button>
         </div>
 
         <div class="sidebar-footer">@2025 AirAware.</div>
@@ -429,7 +489,10 @@ canvas{max-width:100%;}
         <section id="page-home" class="page active">
             <div class="cards-row">
                 <div class="card card-half health-advisory">
-                    <h3>🫁 AQI Summary 🌤️</h3>
+
+                    <!-- <h3>🫁 AQI Summary </h3> -->
+                    <h3>🫁 <span data-i18n="aqiSummary">AQI Summary</span>🌤️</h3>
+
                     <small>Overview for selected state</small>
                     <div class="stat-line"><strong>Temperature:</strong> <span id="tempValue">-- °C</span></div>
                     <div class="stat-line"><strong>Min AQI:</strong> <span id="minAQI">--</span></div>
@@ -443,7 +506,9 @@ canvas{max-width:100%;}
                 </div>
 
                 <div class="card card-half health-advisory">
-                    <h3>🤖 AI Recommendation</h3>
+                    <!-- <h3>🤖 AI Recommendation</h3> -->
+                    <h3>🤖 <span data-i18n="aiRecommendation">AI Recommendation</span></h3>
+
                     <small>Personal safety suggestion</small>
                     <div id="aiRecoText" style="margin-top:8px;font-size:12px;">
                         Select a state to get smart recommendations.
@@ -451,7 +516,10 @@ canvas{max-width:100%;}
                 </div>
 
                 <div class="card card-half health-advisory">
-                    <h3>🩺 Health Advisory ❤️‍🩹</h3>
+
+                    <!-- <h3>🩺 Health Advisory ❤️‍🩹</h3> -->
+                    <h3>❤️ <span data-i18n="healthAdvisory">Health Advisory</span></h3>
+
                     <small>Personalized AQI guidance</small>
                     <div id="healthAdviceText" style="margin-top:8px;font-size:12px;">
                         <span id="healthEmoji">🙂</span>
@@ -459,7 +527,9 @@ canvas{max-width:100%;}
                     </div>
                 </div>
                 <div class="card card-half health-advisory">
-                    <h3>🕘 Your AQI History</h3>
+
+                    <!-- <h3>🕘 Your AQI History</h3> -->
+                    <h3>🕘 <span data-i18n="aqiHistory">Your AQI History</span></h3>
 
                     <small>Recently viewed states</small>
                     <div id="aqiHistory" style="margin-top:8px;font-size:12px;">
@@ -472,12 +542,12 @@ canvas{max-width:100%;}
 
             <div class="cards-row" style="margin-top:18px;">
                 <div class="card card-half">
-                    <h3>Pollutant Mix – Pie Chart</h3>
+                    <h3 data-i18n="pollutantMix">Pollutant Mix – Pie Chart</h3>
                     <small>PM2.5 / PM10 / NO₂ / SO₂</small>
                     <canvas id="pieCanvas"></canvas>
                 </div>
                 <div class="card card-half">
-                    <h3>Prediction – Snapshot</h3>
+                    <h3 data-i18n="predictionSnapshot">Prediction – Snapshot</h3>
                     <small>Now vs +1 year vs +5 years</small>
                     <canvas id="homeCanvas"></canvas>
                     <button style="margin-top:8px;font-size:11px;padding:6px 10px;border-radius:8px;border:none;background:var(--accent);color:#000;cursor:pointer;"
@@ -1506,6 +1576,206 @@ function loadAQIHistory(){
           
       });
 }
+
+
+const I18N = {
+  en: {
+    aqiSummary: "AQI Summary",
+    aiRecommendation: "AI Recommendation",
+    healthAdvisory: "Health Advisory",
+    aqiHistory: "Your AQI History",
+    home: "Home",
+    hourly: "Hourly AQI",
+    daily: "Daily AQI",
+    monthly: "Monthly AQI",
+    prediction: "Prediction",
+    aqi_summary: "AQI Summary",
+    health_advisory: "Health Advisory",
+    ai_reco: "AI Recommendation",
+    hourly_title: "Hourly AQI",
+    daily_title: "Daily AQI",
+    monthly_title: "Monthly AQI",
+    pollutantMix: "Pollutant Mix – Pie Chart",
+    predictionSnapshot: "Prediction – Snapshot",
+    advanced: "Advanced",
+    advancedHub: "Advanced Hub",
+    heatmap: "Heatmap",
+    compareStates: "Compare States",
+    analytics: "Analytics",
+    aiInsights: "AI Insights",
+    toolsThemes: "Tools & Themes",
+    extras: "Extras",
+    aboutUs: "About Us",
+    query: "Query",
+    share: "Share",
+    feedback: "Feedback",
+    views: "Views"
+  },
+  hi: {
+    
+    aiRecommendation: "एआई सुझाव",
+    healthAdvisory: "स्वास्थ्य सलाह",
+    aqiHistory: "आपका AQI इतिहास",
+    home: "होम",
+    hourly: "प्रति घंटे AQI",
+    daily: "दैनिक AQI",
+    monthly: "मासिक AQI",
+    prediction: "पूर्वानुमान",
+    aqiSummary: "AQI सारांश",
+    ai_reco: "एआई सुझाव",
+    hourly_title: "प्रति घंटे AQI",
+    daily_title: "दैनिक AQI",
+    monthly_title: "मासिक AQI",
+    pollutantMix: "प्रदूषक मिश्रण – पाई चार्ट",
+    predictionSnapshot: "अनुमान – स्नैपशॉट",
+    advanced: "उन्नत",
+    advancedHub: "उन्नत हब",
+    heatmap: "हीटमैप",
+    compareStates: "राज्यों की तुलना",
+    analytics: "विश्लेषण",
+    aiInsights: "एआई अंतर्दृष्टि",
+    toolsThemes: "उपकरण और थीम",
+    extras: "अतिरिक्त",
+    aboutUs: "हमारे बारे में",
+    query: "प्रश्न",
+    share: "साझा करें",
+    feedback: "प्रतिक्रिया",
+    views: "दृश्य"
+
+  },
+  te: {
+    aqiSummary: "వాయు నాణ్యత సంగ్రహం",
+    aiRecommendation: "AI సిఫార్సు",
+    healthAdvisory: "ఆరోగ్య సూచనలు",
+    aqiHistory: "మీ AQI చరిత్ర",
+    home: "హోమ్",
+    hourly: "గంటల వారీ AQI",
+    daily: "రోజువారీ AQI",
+    monthly: "నెలవారీ AQI",
+    prediction: "అంచనా",
+    compare: "రాష్ట్రాల పోలిక",
+    pollutantMix: "కాలుష్య మిశ్రమం – పై చార్ట్",
+    predictionSnapshot: "అంచనా – స్నాప్‌షాట్",
+    advanced: "అధునాతన",
+    advancedHub: "అధునాతన హబ్",
+    heatmap: "హీట్‌మ్యాప్",
+    compareStates: "రాష్ట్రాల పోలిక",
+    analytics: "విశ్లేషణలు",
+    aiInsights: "AI అవగాహన",
+    toolsThemes: "పరికరాలు & థీమ్స్",
+    extras: "అదనపు",
+    aboutUs: "మా గురించి",
+    query: "ప్రశ్న",
+    share: "పంచుకోండి",
+    feedback: "ప్రతిస్పందన",
+    views: "వ్యూస్"
+
+  },
+
+  ta: {
+  views: "காட்சிகள்",
+  advanced: "மேம்பட்டது",
+  extras: "கூடுதல்",
+  home: "முகப்பு",
+  hourly: "மணிநேர AQI",
+  daily: "தினசரி AQI",
+  monthly: "மாதாந்திர AQI",
+  prediction: "முன்னறிவு",
+  aqiSummary: "காற்றுத் தர சுருக்கம்",
+  aiRecommendation: "AI பரிந்துரை",
+  healthAdvisory: "ஆரோக்கிய அறிவுரை",
+  aqiHistory: "உங்கள் AQI வரலாறு",
+  pollutantMix: "மாசு கலவை – பை சார்ட்",
+  predictionSnapshot: "முன்னறிவு – சுருக்கம்",
+  aboutUs: "எங்களைப் பற்றி",
+  query: "வினா",
+  share: "பகிர்",
+  feedback: "கருத்து",
+  advancedHub: "மேம்பட்ட மையம்",
+  heatmap: "வெப்ப வரைபடம்",
+  compareStates: "மாநிலங்களை ஒப்பிடு",
+  analytics: "பகுப்பாய்வு",
+  aiInsights: "AI பார்வைகள்",
+  toolsThemes: "கருவிகள் & தீம்கள்"
+
+},
+
+kn: {
+  views: "ನೋಟಗಳು",
+  advanced: "ಮುನ್ನಡೆದ",
+  extras: "ಹೆಚ್ಚುವರಿ",
+  home: "ಮುಖಪುಟ",
+  hourly: "ಗಂಟೆಗೊಮ್ಮೆ AQI",
+  daily: "ದೈನಂದಿನ AQI",
+  monthly: "ಮಾಸಿಕ AQI",
+  prediction: "ಭವಿಷ್ಯವಾಣಿ",
+  aqiSummary: "ವಾಯು ಗುಣಮಟ್ಟ ಸಾರಾಂಶ",
+  aiRecommendation: "AI ಶಿಫಾರಸು",
+  healthAdvisory: "ಆರೋಗ್ಯ ಸಲಹೆ",
+  aqiHistory: "ನಿಮ್ಮ AQI ಇತಿಹಾಸ",
+  pollutantMix: "ಮಾಲಿನ್ಯ ಮಿಶ್ರಣ – ಪೈ ಚಾರ್ಟ್",
+  predictionSnapshot: "ಭವಿಷ್ಯವಾಣಿ – ಕ್ಷಣಚಿತ್ರ",
+  aboutUs: "ನಮ್ಮ ಬಗ್ಗೆ",
+  query: "ಪ್ರಶ್ನೆ",
+  share: "ಹಂಚಿಕೆ",
+  feedback: "ಪ್ರತಿಕ್ರಿಯೆ",
+  advancedHub: "ಮುನ್ನಡೆದ ಕೇಂದ್ರ",
+  heatmap: "ಹೀಟ್‌ಮ್ಯಾಪ್",
+  compareStates: "ರಾಜ್ಯಗಳ ಹೋಲಿಕೆ",
+  analytics: "ವಿಶ್ಲೇಷಣೆ",
+  aiInsights: "AI ಒಳನೋಟಗಳು",
+  toolsThemes: "ಉಪಕರಣಗಳು & ಥೀಮ್‌ಗಳು"
+},
+
+ml: {
+  views: "കാഴ്ചകൾ",
+  advanced: "ഉന്നതം",
+  extras: "കൂടുതൽ",
+  home: "ഹോം",
+  hourly: "മണിക്കൂർ AQI",
+  daily: "ദൈനംദിന AQI",
+  monthly: "മാസിക AQI",
+  prediction: "പ്രവചനം",
+  aqiSummary: "വായു ഗുണനിലവാര സംഗ്രഹം",
+  aiRecommendation: "AI ശുപാർശ",
+  healthAdvisory: "ആരോഗ്യ നിർദേശം",
+  aqiHistory: "നിങ്ങളുടെ AQI ചരിത്രം",
+  pollutantMix: "മലിനീകരണ മിശ്രിതം – പൈ ചാർട്ട്",
+  predictionSnapshot: "പ്രവചനം – സ്നാപ്‌ഷോട്ട്",
+  aboutUs: "ഞങ്ങളെ കുറിച്ച്",
+  query: "ചോദ്യം",
+  share: "പങ്കിടുക",
+  feedback: "അഭിപ്രായം",
+  advancedHub: "ഉന്നത കേന്ദ്രം",
+  heatmap: "ഹീറ്റ്‌മാപ്പ്",
+  compareStates: "സംസ്ഥാനങ്ങളെ താരതമ്യം ചെയ്യുക",
+  analytics: "വിശകലനം",
+  aiInsights: "AI അവബോധങ്ങൾ",
+  toolsThemes: "ഉപകരണങ്ങൾ & തീമുകൾ"
+}
+
+
+
+
+};
+
+function applyLanguage(lang){
+  const dict = I18N[lang];
+  if(!dict) return;
+
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    if(dict[key]) el.textContent = dict[key];
+  });
+
+  localStorage.setItem('airawareLang', lang);
+}
+
+const savedLang = localStorage.getItem('airawareLang') || 'en';
+document.getElementById('languageSelect').value = savedLang;
+applyLanguage(savedLang);
+
+
 
 
 </script>
