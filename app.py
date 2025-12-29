@@ -507,7 +507,19 @@ def auth_page():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dash.html", username=session["username"])
+    #return render_template("dash.html", username=session["username"])
+    c = get_db().cursor()
+    c.execute("SELECT favorite_state FROM users WHERE id=?", (session["user_id"],))
+    row = c.fetchone()
+
+    favorite_state = row["favorite_state"] if row else None
+
+    return render_template(
+        "dash.html",
+        username=session["username"],
+        favorite_state=favorite_state
+    )
+
 
 @app.route("/logout")
 def logout():
@@ -851,6 +863,101 @@ def api_google_login():
     except Exception as e:
         print("Google login error:", e)
         return jsonify({"ok": False, "error": "Invalid Google token"})
+
+#profile page render
+@app.route("/profile")
+@login_required
+def profile():
+    c = get_db().cursor()
+    c.execute("SELECT favorite_state,password_hash FROM users WHERE id=?", (session["user_id"],))
+    row = c.fetchone()
+
+    return render_template(
+        "profile.html",
+        username=session.get("username"),
+        email=session.get("email"),
+        favorite_state=row["favorite_state"] if row else None,
+        password_managed_by_google=(row["password_hash"] == "GOOGLE_AUTH")
+        
+    )
+
+
+
+#fav state
+@app.route("/api/favorite", methods=["POST"])
+@login_required
+def set_favorite():
+    data = request.get_json()
+    state = data.get("state")
+
+    if not state:
+        return jsonify({"ok": False, "error": "No state provided"})
+
+    conn = get_db()
+    c = conn.cursor()
+    c.execute(
+        "UPDATE users SET favorite_state=? WHERE id=?",
+        (state, session["user_id"])
+    )
+    conn.commit()
+
+    return jsonify({"ok": True})
+
+#update username
+@app.route("/api/update-username", methods=["POST"])
+@login_required
+def update_username():
+    data = request.get_json()
+    new_username = data.get("username", "").strip()
+
+    if not new_username:
+        return jsonify({"ok": False, "error": "Username cannot be empty"})
+
+    conn = get_db()
+    c = conn.cursor()
+    c.execute(
+        "UPDATE users SET username=? WHERE id=?",
+        (new_username, session["user_id"])
+    )
+    conn.commit()
+
+    session["username"] = new_username  # keep session in sync
+
+    return jsonify({"ok": True})
+
+#change password
+@app.route("/api/change-password", methods=["POST"])
+@login_required
+def change_password():
+    data = request.get_json()
+    current = data.get("current_password")
+    new = data.get("new_password")
+
+    if not current or not new:
+        return jsonify({"ok": False, "error": "All fields required"})
+
+    c = get_db().cursor()
+    c.execute("SELECT password_hash FROM users WHERE id=?", (session["user_id"],))
+    row = c.fetchone()
+
+    # Google users cannot change password
+    if row["password_hash"] == "GOOGLE_AUTH":
+        return jsonify({
+            "ok": False,
+            "error": "Password is managed by Google"
+        })
+
+    if not check_password_hash(row["password_hash"], current):
+        return jsonify({"ok": False, "error": "Current password incorrect"})
+
+    c.execute(
+        "UPDATE users SET password_hash=? WHERE id=?",
+        (generate_password_hash(new), session["user_id"])
+    )
+    c.connection.commit()
+
+    return jsonify({"ok": True})
+
 
 
 
