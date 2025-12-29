@@ -4,6 +4,7 @@ from groq import Groq
 from dotenv import load_dotenv
 import random
 import os
+import joblib
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 load_dotenv()
@@ -26,7 +27,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # --------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "airaware.db"
-
+model = joblib.load("aqi_rf_model.pkl")
 app = Flask(__name__)
 app.secret_key = os.environ.get("AIRWARE_SECRET_KEY", "dev_secret_change_me")
 CORS(app)  
@@ -188,6 +189,7 @@ def calc_sub_index(val, breakpoints):
     return None
 
 def calculate_exact_aqi(components):
+    #rule-based
     sub_indexes = []
     for pollutant, bp in BREAKPOINTS.items():
         if pollutant in components:
@@ -198,6 +200,21 @@ def calculate_exact_aqi(components):
         return None
     return int(max(sub_indexes))
 
+    #ml based
+    """required = ['PM2.5', 'PM10', 'NO2', 'SO2']
+
+    values = []
+    for p in required:
+        val = components.get(p)
+
+        if val is None:
+            return None
+
+        values.append(float(val))
+
+    X = [values]
+    predicted_aqi = model.predict(X)[0]
+    return int(round(predicted_aqi))"""
 
 def fetch_cpcb_monthly_aqi(station_id, days=30, debug=False):
     """
@@ -297,6 +314,13 @@ def build_heatmap_from_daily(daily):
 
     return heatmap
 
+def normalize_openweather_components(ow_components):
+    return {
+        "PM2.5": ow_components.get("pm2_5"),
+        "PM10": ow_components.get("pm10"),
+        "NO2": ow_components.get("no2"),
+        "SO2": ow_components.get("so2")
+    }
 
 
 def build_aqi_payload(state):
@@ -324,8 +348,10 @@ def build_aqi_payload(state):
                     params={"lat": lat, "lon": lon, "appid": OPENWEATHER_API_KEY},
                     timeout=10
                 ).json()
+                print(air)
 
                 comp = air["list"][0]["components"]
+                comp = normalize_openweather_components(comp)
                 pollutants = [
                     comp.get("pm2_5", 10),
                     comp.get("pm10", 15),
@@ -376,6 +402,7 @@ def build_aqi_payload(state):
                     },
                     timeout=10
                 ).json()
+                
                 
                 hourly = []
                 hourly_ts=[]
@@ -874,6 +901,7 @@ def profile():
 
     return render_template(
         "profile.html",
+        user_id=session["user_id"],
         username=session.get("username"),
         email=session.get("email"),
         favorite_state=row["favorite_state"] if row else None,
@@ -959,6 +987,40 @@ def change_password():
     return jsonify({"ok": True})
 
 
+#forecast
+@app.route("/api/aqi-forecast")
+@login_required
+def aqi_forecast():
+    state = request.args.get("state")
+
+    if not state or state not in STATE_COORDS:
+        return jsonify({"ok": False, "error": "Invalid state"})
+
+    lat, lon = STATE_COORDS[state]
+
+    try:
+        res = requests.get(
+            "https://api.openweathermap.org/data/2.5/air_pollution/forecast",
+            params={
+                "lat": lat,
+                "lon": lon,
+                "appid": OPENWEATHER_API_KEY
+            },
+            timeout=10
+        ).json()
+
+        forecast = []
+        for item in res.get("list", [])[:40]:  # ~5 days (3h intervals)
+            forecast.append({
+                "dt": item["dt"],
+                "aqi": item["main"]["aqi"]
+            })
+
+        return jsonify({"ok": True, "forecast": forecast})
+
+    except Exception as e:
+        print("Forecast error:", e)
+        return jsonify({"ok": False, "error": "Forecast fetch failed"})
 
 
 # --------------------------------------------------------

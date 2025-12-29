@@ -407,6 +407,19 @@ canvas{max-width:100%;}
     100% { transform: scale(1); }
 }
 
+#languageSelect{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.18);
+    background:#02071a;
+    color:var(--text);
+    font-size:13px;
+}
+
+
+
 
 </style>
 </head>
@@ -418,6 +431,7 @@ canvas{max-width:100%;}
     <aside class="sidebar">
         <div>
             <div class="sidebar-title">AirAware</div>
+            <div class="sidebar-sub">Precision in Every Prediction</div>
             <!-- ADD BELOW AirAware title -->
             <select id="languageSelect"
                     style="margin-top:8px"
@@ -430,7 +444,7 @@ canvas{max-width:100%;}
                     <option value="ml">Malayalam</option>
             </select>
 
-            <div class="sidebar-sub">Precision in Every Prediction</div>
+            
 
             <select id="stateSelect" onchange="onStateChange()">
                 <option value="" selected disabled>Choose State (India)</option>
@@ -604,20 +618,15 @@ canvas{max-width:100%;}
             </div>
         </section>
 
-        <!-- PREDICTION FULL -->
+        <!-- forecast FULL -->
         <section id="page-prediction" class="page">
             <div class="card card-wide">
-                <h3>Yearly Prediction</h3>
-                <small>Forecast AQI for coming years</small>
-                <canvas id="predictCanvas"></canvas>
-                <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                    <input id="predictYears" type="number" value="5" min="1" max="20"
-                        style="width:120px;padding:6px;border-radius:7px;border:1px solid rgba(255,255,255,0.25);background:#02071a;color:var(--text);font-size:12px;">
-                    <button style="padding:6px 10px;border-radius:7px;border:none;background:var(--accent);color:#000;font-size:12px;cursor:pointer;"
-                        onclick="requestPrediction()">Get Prediction</button>
-                </div>
+                <h3>🌤 AQI Forecast</h3>
+                <small>Next 5 days (OpenWeather)</small>
+                <canvas id="forecastCanvas"></canvas>
             </div>
         </section>
+
 
         <!-- ADVANCED HUB -->
         <section id="page-advanced" class="page">
@@ -972,7 +981,7 @@ function openPopup(type){
             </p>
             <p style="font-size:12px;margin:6px 0 0;">
                 For any support or collaboration, reach us at
-                <b>karthinadoor@gmail.com</b>.
+                <b>sharmikagangadharan@gmail.com</b>.
             </p>
         `;
     }
@@ -1193,11 +1202,7 @@ function initCharts(){
         options:{plugins:{legend:{display:false}}}
     });
 
-    predictChart=new Chart(document.getElementById('predictCanvas'),{
-        type:'line',
-        data:{labels:[],datasets:[{label:'Predicted AQI',data:[],borderColor:'#00eaff',tension:0.3}]},
-        options:{plugins:{legend:{display:false}}}
-    });
+    
 }
 
 // --------------- AQI HELPERS (same text logic) -------------
@@ -1322,6 +1327,8 @@ function onStateChange(){
           monthlyChart.update();
           buildHeatmap(data.heatmap)
           renderYearlyAQIChart(state);
+          loadAQIForecast(state);
+
 
       })
       .catch(err=>{
@@ -1707,7 +1714,7 @@ const I18N = {
     hourly: "Hourly AQI",
     daily: "Daily AQI",
     monthly: "Monthly AQI",
-    prediction: "Prediction",
+    prediction: "Forecast",
     aqi_summary: "AQI Summary",
     health_advisory: "Health Advisory",
     ai_reco: "AI Recommendation",
@@ -1721,7 +1728,7 @@ const I18N = {
     heatmap: "Heatmap",
     compareStates: "Compare States",
     analytics: "Analytics",
-    aiInsights: "AI Insights",
+    aiInsights: "Insights",
     toolsThemes: "Tools & Themes",
     extras: "Extras",
     aboutUs: "About Us",
@@ -1916,6 +1923,62 @@ function setFavoriteState() {
             alert(data.error || "Failed to save favorite");
         }
     });
+}
+
+//forecast chart
+let forecastChart = null;
+
+function loadAQIForecast(state) {
+    fetch(`/api/aqi-forecast?state=${state}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.ok) return;
+
+            const labels = [];
+            const values = [];
+
+            data.forecast.forEach(f => {
+                const d = new Date(f.dt * 1000);
+                labels.push(
+                    d.toLocaleDateString('en-IN', {
+                        weekday: 'short',
+                        hour: 'numeric'
+                    })
+                );
+
+                // OpenWeather AQI scale → map to approx AQI number
+                const map = {1:40, 2:80, 3:120, 4:180, 5:240};
+                values.push(map[f.aqi]);
+            });
+
+            const ctx = document.getElementById("forecastCanvas").getContext("2d");
+
+            if (forecastChart) forecastChart.destroy();
+
+            forecastChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Forecast AQI",
+                        data: values,
+                        tension: 0.35,
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            title: { display: true, text: "AQI" }
+                        }
+                    }
+                }
+            });
+        });
 }
 
 
