@@ -1271,11 +1271,39 @@ function maskText(aqi){
     if(aqi<=160) return 'Use surgical or KN95 outside for long duration.';
     return 'N95 recommended for all when going outdoors.';
 }
-function safetyScore(aqi){
-    const indoor=Math.max(20,220-aqi);
-    const outdoor=Math.max(5,160-aqi);
-    return "Indoor safety: ${indoor}% | Outdoor safety: ${outdoor}%";
+function safetyScore(aqi) {
+    let indoor, outdoor, level;
+
+    if (aqi <= 50) {
+        level = "Good";
+        indoor = 100;
+        outdoor = 100;
+    } else if (aqi <= 100) {
+        level = "Satisfactory";
+        indoor = 95;
+        outdoor = 85;
+    } else if (aqi <= 200) {
+        level = "Moderate";
+        indoor = 85;
+        outdoor = 60;
+    } else if (aqi <= 300) {
+        level = "Poor";
+        indoor = 65;
+        outdoor = 30;
+    } else if (aqi <= 400) {
+        level = "Very Poor";
+        indoor = 50;
+        outdoor = 15;
+    } else {
+        level = "Severe";
+        indoor = 35;
+        outdoor = 5;
+    }
+
+    return `AQI Level: ${level} | Indoor safety: ${indoor}% | Outdoor safety: ${outdoor}%`
+
 }
+
 function starRating(aqi){
     if(aqi<=80) return '⭐⭐⭐⭐☆';
     if(aqi<=120) return '⭐⭐⭐☆☆';
