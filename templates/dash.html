@@ -622,7 +622,7 @@ canvas{max-width:100%;}
         <section id="page-prediction" class="page">
             <div class="card card-wide">
                 <h3>🌤 AQI Forecast</h3>
-                <small>Next 5 days (OpenWeather)</small>
+                <small>Next 2 days (OpenWeather)</small>
                 <canvas id="forecastCanvas"></canvas>
             </div>
         </section>
@@ -1151,16 +1151,56 @@ applyTheme(savedTheme,false);
 document.getElementById('themeSelector').value=savedTheme;
 
 // --------------- SHARE HELPERS ----------------
-function shareWhatsApp(){
-    const msg=encodeURIComponent('Check this AirAware AQI Dashboard!');
-    window.open('https://wa.me/?text='+msg,'_blank');
+function shareWhatsApp() {
+    const state = document.getElementById("stateSelect")?.value || "your state";
+    const aqi = document.getElementById("currAQI")?.textContent || "N/A";
+
+    const message = `
+🌍 AirAware – AQI Dashboard
+
+📍 State: ${state}
+🌫 Current AQI: ${aqi}
+
+Check live air quality data here 👇
+${window.location.origin}
+    `;
+
+    const encodedMsg = encodeURIComponent(message.trim());
+
+    window.open(
+        `https://wa.me/?text=${encodedMsg}`,
+        "_blank"
+    );
 }
-function shareEmail(){
-    const link = window.location.origin + '/';
-    const subject = encodeURIComponent('AirAware AQI Dashboard');
-    const body = encodeURIComponent('Check this AirAware AQI Dashboard: '+link);
-    window.location.href='mailto:?subject='+subject+'&body='+body;
+
+function shareEmail() {
+    const state =
+        document.getElementById("stateSelect")?.value || "your state";
+
+    const aqi =
+        document.getElementById("currAQI")?.textContent || "N/A";
+
+    const link = window.location.origin;
+
+    const subject = encodeURIComponent("AirAware – AQI Dashboard");
+
+    const body = encodeURIComponent(
+`Hello,
+
+I wanted to share the AirAware AQI Dashboard with you.
+
+State: ${state}
+Current AQI: ${aqi}
+
+View live air quality data here:
+${link}
+
+— Shared via AirAware`
+    );
+
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
+
 function copyShareLink(){
     const link=window.location.origin + '/';
     if(navigator.clipboard){
@@ -1925,7 +1965,7 @@ function setFavoriteState() {
     });
 }
 
-//forecast chart
+// forecast chart
 let forecastChart = null;
 
 function loadAQIForecast(state) {
@@ -1945,13 +1985,12 @@ function loadAQIForecast(state) {
                         hour: 'numeric'
                     })
                 );
-
-                // OpenWeather AQI scale → map to approx AQI number
-                const map = {1:40, 2:80, 3:120, 4:180, 5:240};
-                values.push(map[f.aqi]);
+                values.push(f.aqi); // ✅ real AQI
             });
 
-            const ctx = document.getElementById("forecastCanvas").getContext("2d");
+            const ctx = document
+                .getElementById("forecastCanvas")
+                .getContext("2d");
 
             if (forecastChart) forecastChart.destroy();
 
@@ -1978,8 +2017,10 @@ function loadAQIForecast(state) {
                     }
                 }
             });
-        });
+        })
+        .catch(err => console.error("Forecast error:", err));
 }
+
 
 
 </script>

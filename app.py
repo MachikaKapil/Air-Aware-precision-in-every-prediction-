@@ -987,7 +987,6 @@ def change_password():
     return jsonify({"ok": True})
 
 
-#forecast
 @app.route("/api/aqi-forecast")
 @login_required
 def aqi_forecast():
@@ -1010,17 +1009,38 @@ def aqi_forecast():
         ).json()
 
         forecast = []
-        for item in res.get("list", [])[:40]:  # ~5 days (3h intervals)
+
+        for item in res.get("list", [])[:40]:  # ~5 days (3-hour intervals)
+            components = item.get("components", {})
+
+            # 🔥 Calculate real AQI using your existing logic
+            aqi_value = calculate_exact_aqi(components)
+
+            if aqi_value is None:
+                continue
+
             forecast.append({
                 "dt": item["dt"],
-                "aqi": item["main"]["aqi"]
+                "aqi": aqi_value,
+                "components": {
+                    "pm2_5": components.get("pm2_5"),
+                    "pm10": components.get("pm10"),
+                    "no2": components.get("no2"),
+                    "so2": components.get("so2"),
+                    "o3": components.get("o3")
+                }
             })
 
-        return jsonify({"ok": True, "forecast": forecast})
+        return jsonify({
+            "ok": True,
+            "state": state,
+            "forecast": forecast
+        })
 
     except Exception as e:
         print("Forecast error:", e)
         return jsonify({"ok": False, "error": "Forecast fetch failed"})
+
 
 
 # --------------------------------------------------------
