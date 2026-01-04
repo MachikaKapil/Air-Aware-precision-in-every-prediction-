@@ -1224,23 +1224,319 @@ function initCharts(){
     });
 
 
-    hourlyChart=new Chart(document.getElementById('hourlyCanvas'),{
-        type:'line',
-        data:{labels:[],datasets:[{label:'Hourly AQI',data:[],borderColor:'#00eaff',tension:0.3}]},
-        options:{plugins:{legend:{display:false}}}
+    hourlyChart = new Chart(document.getElementById('hourlyCanvas'), {
+        type: 'line',
+        data: {
+            labels: [],     // fill dynamically
+            datasets: [{
+                label: 'Hourly AQI',
+                data: [],    // fill dynamically
+                borderColor: '#00eaff',
+                backgroundColor: 'rgba(0,234,255,0.15)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+
+            plugins: {
+                legend: { display: false },
+
+                title: {
+                    display: true,
+                    text: 'Hourly AQI Trend (Last 24 Hours)',
+                    font: { size: 14 }
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const aqi = ctx.parsed.y;
+                            let cat = "Good";
+                            if (aqi <= 80) cat = "Good";
+                            else if (aqi <= 120) cat = "Moderate";
+                            else if (aqi <= 160) cat = "Poor";
+                            else if (aqi <= 200) cat = "Very Poor";
+                            else cat= "Hazardous"
+                            return `AQI: ${aqi} (${cat})`;
+                        }
+                    }
+                },
+
+                annotation: {
+                    annotations: {
+                        good: {
+                            type: 'box',
+                            yMin: 0,
+                            yMax: 80,
+                            backgroundColor: 'rgba(0,200,0,0.08)'
+                        },
+                        satisfactory: {
+                            type: 'box',
+                            yMin: 81,
+                            yMax: 120,
+                            backgroundColor: 'rgba(255,215,0,0.08)'
+                        },
+                        moderate: {
+                            type: 'box',
+                            yMin: 121,
+                            yMax: 160,
+                            backgroundColor: 'rgba(255,165,0,0.08)'
+                        },
+                        poor: {
+                            type: 'box',
+                            yMin: 161,
+                            yMax: 200,
+                            backgroundColor: 'rgba(255,0,0,0.08)'
+                        },
+                        dangerLine: {
+                            type: 'line',
+                            yMin: 100,
+                            yMax: 100,
+                            borderColor: 'red',
+                            borderWidth: 1,
+                            borderDash: [6, 6],
+                            label: {
+                                content: 'Unhealthy Threshold',
+                                enabled: true,
+                                position: 'start'
+                            }
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time (Last 24 Hours)'
+                    },
+                    ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 8
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'AQI Value'
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 300,
+                    ticks: {
+                        stepSize: 50
+                    }
+                }
+            }
+        }
     });
 
-    dailyChart=new Chart(document.getElementById('dailyCanvas'),{
-        type:'line',
-        data:{labels:[],datasets:[{label:'Daily AQI',data:[],borderColor:'#00eaff',tension:0.3}]},
-        options:{plugins:{legend:{display:false}}}
+
+    dailyChart = new Chart(document.getElementById('dailyCanvas'), {
+        type: 'line',
+        data: {
+            labels: [],      // fill with dates (e.g., Mon, Tue, Wed)
+            datasets: [{
+                label: 'Daily AQI',
+                data: [],     // fill with daily AQI values
+                borderColor: '#00eaff',
+                backgroundColor: 'rgba(0,234,255,0.15)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+
+            plugins: {
+                legend: { display: false },
+
+                title: {
+                    display: true,
+                    text: 'Daily AQI Trend',
+                    font: { size: 14 }
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const aqi = ctx.parsed.y;
+                            let level = 'Hazardous';
+                            if (aqi <= 80) level = 'Good';
+                            else if (aqi <= 120) level = 'Moderate';
+                            else if (aqi <= 160) level = 'Poor';
+                            else if (aqi <= 200) level = 'Very Poor';
+
+                            return `AQI: ${aqi} (${level})`;
+                        }
+                    }
+                },
+
+                annotation: {
+                    annotations: {
+                        good: {
+                            type: 'box',
+                            yMin: 0,
+                            yMax: 80,
+                            backgroundColor: 'rgba(0,200,0,0.08)'
+                        },
+                        moderate: {
+                            type: 'box',
+                            yMin: 81,
+                            yMax: 120,
+                            backgroundColor: 'rgba(255,215,0,0.08)'
+                        },
+                        poor: {
+                            type: 'box',
+                            yMin: 121,
+                            yMax: 160,
+                            backgroundColor: 'rgba(255,165,0,0.08)'
+                        },
+                        veryPoor: {
+                            type: 'box',
+                            yMin: 161,
+                            yMax: 200,
+                            backgroundColor: 'rgba(255,0,0,0.08)'
+                        },
+                        hazardous: {
+                            type: 'box',
+                            yMin: 201,
+                            yMax: 500,
+                            backgroundColor: 'rgba(128,0,128,0.1)'
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'AQI Value'
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 300,
+                    ticks: {
+                        stepSize: 40
+                    }
+                }
+            }
+        }
     });
 
-    monthlyChart=new Chart(document.getElementById('monthlyCanvas'),{
-        type:'line',
-        data:{labels:[],datasets:[{label:'Monthly AQI',data:[],borderColor:'#00eaff',tension:0.3}]},
-        options:{plugins:{legend:{display:false}}}
+
+    monthlyChart = new Chart(document.getElementById('monthlyCanvas'), {
+        type: 'line',
+        data: {
+            labels: [],      // e.g. Jan, Feb, Mar...
+            datasets: [{
+                label: 'Monthly AQI',
+                data: [],     // monthly average AQI values
+                borderColor: '#00eaff',
+                backgroundColor: 'rgba(0,234,255,0.15)',
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+
+            plugins: {
+                legend: { display: false },
+
+                title: {
+                    display: true,
+                    text: 'Monthly Average AQI Trend',
+                    font: { size: 14 }
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const aqi = ctx.parsed.y;
+                            let level = 'Hazardous';
+                            if (aqi <= 80) level = 'Good';
+                            else if (aqi <= 120) level = 'Moderate';
+                            else if (aqi <= 160) level = 'Poor';
+                            else if (aqi <= 200) level = 'Very Poor';
+
+                            return `AQI: ${aqi} (${level})`;
+                        }
+                    }
+                },
+
+                annotation: {
+                    annotations: {
+                        good: {
+                            type: 'box',
+                            yMin: 0,
+                            yMax: 80,
+                            backgroundColor: 'rgba(0,200,0,0.08)'
+                        },
+                        moderate: {
+                            type: 'box',
+                            yMin: 81,
+                            yMax: 120,
+                            backgroundColor: 'rgba(255,215,0,0.08)'
+                        },
+                        poor: {
+                            type: 'box',
+                            yMin: 121,
+                            yMax: 160,
+                            backgroundColor: 'rgba(255,165,0,0.08)'
+                        },
+                        veryPoor: {
+                            type: 'box',
+                            yMin: 161,
+                            yMax: 200,
+                            backgroundColor: 'rgba(255,0,0,0.08)'
+                        },
+                        hazardous: {
+                            type: 'box',
+                            yMin: 201,
+                            yMax: 500,
+                            backgroundColor: 'rgba(128,0,128,0.1)'
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'AQI Value'
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 300,
+                    ticks: {
+                        stepSize: 40
+                    }
+                }
+            }
+        }
     });
+
 
     
 }
@@ -1625,7 +1921,6 @@ function renderAnalyticsSummary(data){
         <b>Current AQI:</b> ${data.curr}<br>
         <b>24h Avg AQI:</b> ${avg24}<br>
         <b>7d Avg AQI:</b> ${avg7}<br>
-        <b>Confidence:</b> ${data.confidence}%
     `;
 }
 
