@@ -351,12 +351,12 @@ def build_aqi_payload(state):
                 print(air)
 
                 comp = air["list"][0]["components"]
-                comp = normalize_openweather_components(comp)
+                
                 pollutants = [
-                    comp.get("pm2_5", 10),
-                    comp.get("pm10", 15),
-                    comp.get("no2", 5),
-                    comp.get("so2", 3)
+                    comp.get("pm2_5"),
+                    comp.get("pm10"),
+                    comp.get("no2"),
+                    comp.get("so2")
                 ]
                 curr_aqi = calculate_exact_aqi(comp)
 
