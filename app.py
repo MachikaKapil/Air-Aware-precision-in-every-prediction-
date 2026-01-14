@@ -8,7 +8,7 @@ import joblib
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 load_dotenv()
-
+import json
 import sqlite3
 from pathlib import Path
 from functools import wraps
@@ -698,6 +698,7 @@ def api_chat():
         return jsonify({"ok": False, "reply": "Ollama not running."})"""
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+print(GROQ_API_KEY)
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
